@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t $DOCKER_ID/mc-react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run $DOCKER_ID/mc-react-test npm test -- --coverage
+
+after_success:
+  - docker build -t $DOCKER_ID/mc-client ./client
+  - docker build -t $DOCKER_ID/mc-nginx ./nginx
+  - docker build -t $DOCKER_ID/mc-server ./server
+  - docker build -t $DOCKER_ID/mc-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to Docker Hub
+  - docker push $DOCKER_ID/mc-client
+  - docker push $DOCKER_ID/mc-nginx
+  - docker push $DOCKER_ID/mc-server
+  - docker push $DOCKER_ID/mc-worker
